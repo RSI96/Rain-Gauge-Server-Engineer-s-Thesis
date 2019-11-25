@@ -108,7 +108,7 @@ async function readAll() {
 
 async function readLastHour() {
     try {
-        const results = await client.query("select coalesce(sum(measurement), 0) as suma from rain_gauge_data where time >= localtime - $1 * interval '1 hour'", [1]);
+        const results = await client.query("select coalesce(sum(measurement), 0) as suma from rain_gauge_data where date_time >= now() - interval '1 hour'");
         return results.rows
     } catch (e) {
         return []
