@@ -4,12 +4,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "./node_modules/nodemon/bin/nodemon.js src/index.js --exec 'npm run node'"
   },
   "author": "Radek",
   "license": "ISC",
   "dependencies": {
     "express": "^4.17.1",
     "pg": "^7.14.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.1"
   }
 }

@@ -64,6 +64,11 @@ app.get('/lastWeek', async (req, res) => {
     res.send(rows)
 });
 
+app.get('/lastWeekArrays', async (req, res) => {
+    const rows = await loadLastWeekArrays();
+    res.send(rows)
+});
+
 app.post('/all', async (req, res) => {
     let result = {};
     try {
@@ -129,6 +134,15 @@ async function loadLastWeek() {
     try {
         const results = await client.query("select T.date, T.hour, T.date + T.hour as date_time, coalesce(sum(measurement), 0) as suma from (select DATE(date) as date, cast (hour::timestamp as time) as hour, DATE(date) + cast (hour::timestamp as time) as date_time from generate_series( current_date - '7 days'::interval, current_date, '1 day'::interval ) as date cross join generate_series(date_trunc('day', now()) - '23 hours'::interval, date_trunc('day', now()),    '1 hour'::interval   ) as hour) AS T left join rain_gauge_data on date_trunc('hour', rain_gauge_data.time) = T.hour and T.date = rain_gauge_data.date group by T.date, T.hour order by T.date, T.hour");
         return results.rows.mapDateTimezone("date_time").groupByKey("date");
+    } catch (e) {
+        return []
+    }
+}
+
+async function loadLastWeekArrays() {
+    try {
+        const results = await client.query("select P.date, array_agg(P.hour) as hours, array_agg(P.suma) as values from (select T.date, T.hour, coalesce(sum(measurement), 0) as suma from (select DATE(date) as date, cast (hour::timestamp as time) as hour, DATE(date) + cast (hour::timestamp as time) as date_time from generate_series( current_date - '6 days'::interval, current_date, '1 day'::interval ) as date cross join generate_series(date_trunc('day', now()) - '23 hours'::interval, date_trunc('day', now()),'1 hour'::interval   ) as hour) AS T left join rain_gauge_data on date_trunc('hour', rain_gauge_data.time) = T.hour and T.date = rain_gauge_data.date group by T.date, T.hour order by T.date, T.hour) as P group by P.date\n");
+        return results.rows
     } catch (e) {
         return []
     }
