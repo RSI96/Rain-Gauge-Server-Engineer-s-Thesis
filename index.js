@@ -174,7 +174,7 @@ async function loadLastWeek() {
 
 async function loadLastWeekArrays() {
     try {
-        const results = await client.query("select P.date, array_agg(date_part('hour', P.hour)) as hours, array_agg(P.suma) as values from (select T.date, T.hour, coalesce(sum(measurement), 0) as suma from (select DATE(date) as date, cast (hour::timestamp as time) as hour, DATE(date) + cast (hour::timestamp as time) as date_time from generate_series( current_date - '6 days'::interval, current_date, '1 day'::interval ) as date cross join generate_series(date_trunc('day', now()) - '23 hours'::interval, date_trunc('day', now()),'1 hour'::interval   ) as hour) AS T left join rain_gauge_data on date_trunc('hour', rain_gauge_data.time) = T.hour and T.date = rain_gauge_data.date group by T.date, T.hour order by T.date, T.hour) as P group by P.date order by date desc");
+        const results = await client.query("select P.date, array_agg(P.hour) as hours, array_agg(P.suma) as values from (select T.date, T.hour, coalesce(sum(measurement), 0) as suma from (select DATE(date) as date, cast (hour::timestamp as time) as hour, DATE(date) + cast (hour::timestamp as time) as date_time from generate_series( current_date - '7 days'::interval, current_date, '1 day'::interval ) as date cross join generate_series(date_trunc('day', now()) - '23 hours'::interval, date_trunc('day', now()),'1 hour'::interval   ) as hour) AS T left join rain_gauge_data on date_trunc('hour', rain_gauge_data.time) = T.hour and T.date = rain_gauge_data.date group by T.date, T.hour order by T.date, T.hour) as P group by P.date order by date desc");
         return results.rows
     } catch (e) {
         return []
@@ -183,7 +183,7 @@ async function loadLastWeekArrays() {
 
 async function loadInterval15min() {
     try {
-        const results = await client.query("select P.temp, array_agg(P.hour) as hours, array_agg(P.suma) as values from (select series, date_part('second', series) as temp, cast(series::timestamp as time) as hour, coalesce(sum(measurement), 0) as suma   from   generate_series ( date_trunc('minute', now()::timestamp) - '12 hour'::interval, date_trunc('minute', now()::timestamp), '15 minutes'::interval ) as series   left join rain_gauge_data on date_trunc('minute', rain_gauge_data.date_time) >= series and date_trunc('minute', rain_gauge_data.date_time) < series + '15 minutes' and now()::timestamp >= date_time - INTERVAL '1 DAY'   group by 1   order by series) as P group by P.temp");
+        const results = await client.query("select P.temp, array_agg(P.hour) as hours, array_agg(P.suma) as values from (select series, date_part('second', series) as temp, cast(series::timestamp as time) as hour, coalesce(sum(measurement), 0) as suma   from   generate_series ( date_trunc('minute', now()::timestamp) - '24 hour'::interval, date_trunc('minute', now()::timestamp), '15 minutes'::interval ) as series   left join rain_gauge_data on date_trunc('minute', rain_gauge_data.date_time) >= series and date_trunc('minute', rain_gauge_data.date_time) < series + '15 minutes' and now()::timestamp >= date_time - INTERVAL '1 DAY'   group by 1   order by series) as P group by P.temp");
         return results.rows
     } catch (e) {
         return []
